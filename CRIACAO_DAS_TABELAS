@@ -1,0 +1,127 @@
+-- Create database ecommerce;
+
+-- Use ecommerce
+
+-- Criação das tabelas principais
+
+CREATE TABLE Terceiro_Vendedor (
+    IdTerceiro INT PRIMARY KEY,
+    Razao_Social VARCHAR(45) NOT NULL,
+    Local VARCHAR(45)
+);
+
+CREATE TABLE Fornecedor (
+    IdFornecedor INT PRIMARY KEY,
+    Razao_Social VARCHAR(45) NOT NULL,
+    CNPJ VARCHAR(18) UNIQUE NOT NULL
+);
+
+CREATE TABLE Produto (
+    IdProduto INT PRIMARY KEY,
+    Categoria VARCHAR(20) NOT NULL,
+    Descricao VARCHAR(45) NOT NULL,
+    Valor DECIMAL(10, 2) NOT NULL -- Valor deve ser numérico
+);
+
+CREATE TABLE Estoque (
+    IdEstoque INT PRIMARY KEY,
+    Local VARCHAR(45) NOT NULL
+);
+
+CREATE TABLE Pessoa_Fisica (
+    IdClientePF INT PRIMARY KEY,
+    Nome VARCHAR(40) NOT NULL,
+    Endereco VARCHAR(50) NOT NULL,
+    Identificacao VARCHAR(14) UNIQUE NOT NULL -- CPF
+);
+
+CREATE TABLE Pessoa_Juridica (
+    IdClientePJ INT PRIMARY KEY,
+    Razao_Social VARCHAR(45) NOT NULL,
+    Endereco VARCHAR(50) NOT NULL,
+    CNPJ VARCHAR(18) UNIQUE NOT NULL
+);
+
+CREATE TABLE Pedido (
+    IdPedido INT PRIMARY KEY,
+    Cliente_IdClientePF INT,
+    Cliente_IdClientePJ INT,
+    Status_do_Pedido VARCHAR(45) NOT NULL,
+    Descricao VARCHAR(45),
+    Frete DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (Cliente_IdClientePF) REFERENCES Pessoa_Fisica(IdClientePF)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Cliente_IdClientePJ) REFERENCES Pessoa_Juridica(IdClientePJ)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE Entrega (
+    IdEntrega INT PRIMARY KEY,
+    Pedido_IdPedido INT NOT NULL,
+    Status VARCHAR(30) NOT NULL,
+    FOREIGN KEY (Pedido_IdPedido) REFERENCES Pedido(IdPedido)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Tabelas de relacionamento
+
+CREATE TABLE Disponibilizando_Produto (
+    Fornecedor_IdFornecedor INT,
+    Produto_IdProduto INT,
+    PRIMARY KEY (Fornecedor_IdFornecedor, Produto_IdProduto),
+    FOREIGN KEY (Fornecedor_IdFornecedor) REFERENCES Fornecedor(IdFornecedor)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Produto_IdProduto) REFERENCES Produto(IdProduto)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE Produtos_Por_Vendedor (
+    Terceiro_IdTerceiro INT,
+    Produto_IdProduto INT,
+    Quantidade INT NOT NULL,
+    PRIMARY KEY (Terceiro_IdTerceiro, Produto_IdProduto),
+    FOREIGN KEY (Terceiro_IdTerceiro) REFERENCES Terceiro_Vendedor(IdTerceiro)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Produto_IdProduto) REFERENCES Produto(IdProduto)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE Relacao_Produto_Pedido (
+    Produto_IdProduto INT,
+    Pedido_IdPedido INT,
+    Quantidade INT NOT NULL, -- Quantidade deve ser numérica
+    PRIMARY KEY (Produto_IdProduto, Pedido_IdPedido),
+    FOREIGN KEY (Produto_IdProduto) REFERENCES Produto(IdProduto)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Pedido_IdPedido) REFERENCES Pedido(IdPedido)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE Produto_Estoque (
+    Produto_IdProduto INT,
+    Estoque_IdEstoque INT,
+    Quantidade INT NOT NULL, -- Quantidade deve ser numérica
+    PRIMARY KEY (Produto_IdProduto, Estoque_IdEstoque),
+    FOREIGN KEY (Produto_IdProduto) REFERENCES Produto(IdProduto)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Estoque_IdEstoque) REFERENCES Estoque(IdEstoque)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE Pagamento (
+    Cliente_IdClientePJ INT,
+    Cliente_IdClientePF INT,
+    Carta_de_Credito VARCHAR(20),
+    Pix VARCHAR(20),
+    Debito VARCHAR(20),
+    Valor DECIMAL(10, 2) NOT NULL, -- Valor deve ser numérico
+    FOREIGN KEY (Cliente_IdClientePJ) REFERENCES Pessoa_Juridica(IdClientePJ)
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    FOREIGN KEY (Cliente_IdClientePF) REFERENCES Pessoa_Fisica(IdClientePF)
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+-- Índices para melhorar desempenho
+CREATE INDEX idx_produto_categoria ON Produto(Categoria);
+CREATE INDEX idx_pedido_status ON Pedido(Status_do_Pedido);
+CREATE INDEX idx_entrega_status ON Entrega(Status);
