@@ -1,0 +1,88 @@
+use ecommerce
+
+Select * from Estoque ok
+
+Select * from Fornecedor ok
+
+Select * from Pagamento ok
+
+Select * From Pedido ok
+
+Select * From Produtos_Por_Vendedor ok
+
+Select * From Terceiro_Vendedor ok
+
+Select * From Relacao_Produto_Pedido ok
+
+Select * from Pessoa_Juridica ok
+
+Select * From Produto_Estoque ok
+
+Select * From Entrega ok
+
+Select * From Disponibilizando_Produto ok
+
+Select * From Pessoa_Fisica ok
+
+---------------------------------------------------------
+
+SELECT * FROM Pedido
+WHERE Status_do_Pedido = 'Em andamento';
+
+----------------------------------------------------------
+
+SELECT pf.Nome, p.IdPedido, p.Status_do_Pedido, p.Descricao
+FROM Pessoa_Fisica pf
+JOIN Pedido p ON pf.IdClientePF = p.Cliente_IdClientePF;
+
+------------------------------------------------------------
+
+SELECT p.Descricao AS Produto, f.Razao_Social AS Fornecedor
+FROM Produto p
+JOIN Disponibilizando_Produto dp ON p.IdProduto = dp.Produto_IdProduto
+JOIN Fornecedor f ON dp.Fornecedor_IdFornecedor = f.IdFornecedor;
+
+------------------------------------------------------------------
+
+SELECT pj.Razao_Social AS Cliente, COUNT(p.IdPedido) AS Total_Pedidos
+FROM Pessoa_Juridica pj
+JOIN Pedido p ON pj.IdClientePJ = p.Cliente_IdClientePJ
+GROUP BY pj.Razao_Social;
+
+--------------------------------------------------------------------
+
+SELECT p.Descricao AS Produto, pe.Quantidade
+FROM Produto p
+JOIN Produto_Estoque pe ON p.IdProduto = pe.Produto_IdProduto
+WHERE pe.Quantidade < 50;
+
+------------------------------
+
+SELECT *
+FROM Pagamento
+WHERE Carta_de_Credito IS NOT NULL;
+
+---------------------------------------------------------------------
+
+SELECT p.IdPedido, SUM(pr.Valor * rpp.Quantidade) + p.Frete AS Valor_Total
+FROM Pedido p
+JOIN Relacao_Produto_Pedido rpp ON p.IdPedido = rpp.Pedido_IdPedido
+JOIN Produto pr ON rpp.Produto_IdProduto = pr.IdProduto
+GROUP BY p.IdPedido, p.Frete;
+
+--------------------------------------------------------------------------
+
+SELECT pf.Nome AS Cliente_PF, pj.Razao_Social AS Cliente_PJ, pg.Pix
+FROM Pagamento pg
+LEFT JOIN Pessoa_Fisica pf ON pg.Cliente_IdClientePF = pf.IdClientePF
+LEFT JOIN Pessoa_Juridica pj ON pg.Cliente_IdClientePJ = pj.IdClientePJ
+WHERE pg.Pix IS NOT NULL;
+
+-----------------------------------------------------------------------
+
+SELECT p.Descricao AS Produto, SUM(rpp.Quantidade) AS Total_Vendido
+FROM Produto p
+JOIN Relacao_Produto_Pedido rpp ON p.IdProduto = rpp.Produto_IdProduto
+GROUP BY p.Descricao
+ORDER BY Total_Vendido DESC
+LIMIT 5;
